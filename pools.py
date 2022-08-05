@@ -27,6 +27,19 @@ def client(node):
         type_registry=custom_type_registry,
     )
 
+def load_assets(client):
+    assets = client.query_map("AssetRegistry", "AssetMetadataMap")
+
+    r = {0: "BSX"}
+
+    for asset in assets:
+        asset_id = asset[0].decode()
+        metadata = asset[1].decode()
+        r[asset_id] = metadata["symbol"]
+
+    print(r)
+    return r
+
 
 def get_balance(client, address, currency):
     if currency == 0:
@@ -39,6 +52,8 @@ if __name__ == "__main__":
     client = client("wss://rpc.basilisk.cloud")
     pools = client.query_map("XYK", "ShareToken")
 
+    bsx_assets = load_assets(client)
+
     for pool in pools:
         pool_address = pool[0]
         share_token = pool[1]
@@ -48,11 +63,14 @@ if __name__ == "__main__":
         asset_1_balance = get_balance(client, pool_address, a1)
         asset_2_balance = get_balance(client, pool_address, a2)
 
-        print(f"Pool assets: {assets} Share token: {share_token} Address: {pool_address}")
+        a1_symbol = bsx_assets[a1]
+        a2_symbol = bsx_assets[a2]
+
+        print(f"Pool assets: ({a1_symbol, a2_symbol}) Share token: {share_token} Address: {pool_address}")
         print("")
 
-        print(f"Asset {assets[0]} balance: {asset_1_balance}")
-        print(f"Asset {assets[1]} balance: {asset_2_balance}")
+        print(f"Asset {a1_symbol} balance: {asset_1_balance}")
+        print(f"Asset {a2_symbol} balance: {asset_2_balance}")
 
         print("-------------------------------------------------------------------------")
     client.close()
